@@ -29,7 +29,7 @@ Small descriptions:
 		akDispatcher/example.php - example of using
 
 	3.
-		akQuery/akQuery.class.php - DB query compose system
+		akQuery/akQuery.class.php - Light DB query compose system
 		akQuery/example.php - example of using
 
 	4.
