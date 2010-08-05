@@ -15,7 +15,7 @@
 
 akLib - Azat Khuzhin Library
 Begin date: 11.07.10
-Requires: >= PHP 5.3
+Requires: >= PHP 5.2
 Please use set_include_path() function
 And don`t forget about extract() function
 

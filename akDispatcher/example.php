@@ -33,10 +33,14 @@ function multi() {
 		'second', akDispatcher::getInstance()->getParam('second')
 	);
 }
+// fixed for PHP < 5.3
+function before() { return 'before' . "\n"; }
+function after() { return 'after' . "\n"; }
+function def() { return 'default' . "\n"; }
 
 // dispatcher
 $dispatcher = akDispatcher::getInstance();
-$dispatcher->setCallbacks(function() { return 'before' . "\n"; }, function() { return 'after' . "\n"; }, function () { return 'default' . "\n"; });
+$dispatcher->setCallbacks('before', 'after', 'def');
 
 $dispatcher->add('/akDispatcher/test/:param1/a', 'a');
 $dispatcher->add('/akDispatcher/te[]st/c/:param1/:param2', 'c');
