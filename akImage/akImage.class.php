@@ -155,7 +155,7 @@ class akImage {
 						$scale = (imagesx($image) / $y);
 						break;
 					case self::resizeByXY:
-						$scale = (imagesx($image) > imagesy($image) ? (imagesy($image) / $y) : (imagesx($image) / $x));
+						$scale = (imagesx($image) < imagesy($image) ? (imagesy($image) / $y) : (imagesx($image) / $x));
 						break;
 				}
 				
