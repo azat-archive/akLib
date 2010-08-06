@@ -216,12 +216,19 @@ class akImage {
 	 * Write image to STDOUT
 	 * 
 	 * @return void
+	 * 
+	 * @throws akException
 	 */
 	public function write() {
-		$ext = $this->extensionCheck($this->srcPath);
+		if ((!extension_loaded('gd') && !extension_loaded('gd2'))) {
+			throw new akException('No GD found');
+		}
 		
 		header('Content-type: image/' . $ext);
-		call_user_func_array('image' . $ext, array($this->srcPath));
+		
+		$ext = $this->extensionCheck($this->srcPath);
+		$image = call_user_func_array('imagecreatefrom' . $ext, array($this->srcPath));
+		call_user_func_array('image' . $ext, array($image));
 	}
 
 	/**
