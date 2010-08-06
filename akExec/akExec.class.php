@@ -90,7 +90,7 @@ class akExec {
 	 * @return string
 	 */
 	static function getFileExt($path, $tolower = true) {
-		if (preg_match('@.([^./]+)$@is', $path, $ext)) {
+		if (preg_match('@\.([^./]+)$@is', $path, $ext)) {
 			return ($tolower ? mb_strtolower($ext[1]) : $ext[1]);
 		}
 		return null;

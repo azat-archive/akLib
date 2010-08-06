@@ -213,6 +213,16 @@ class akImage {
 	}
 
 	/**
+	 * Write image to STDOUT
+	 * 
+	 * @return void
+	 */
+	public function write() {
+		$ext = $this->extensionCheck($this->srcPath);
+		call_user_func_array('image' . $ext, array($this->srcPath));
+	}
+
+	/**
 	 * Open image (detect write type)
 	 * 
 	 * @see this::extensionCheck()
