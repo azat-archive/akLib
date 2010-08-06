@@ -219,6 +219,8 @@ class akImage {
 	 */
 	public function write() {
 		$ext = $this->extensionCheck($this->srcPath);
+		
+		header('Content-type: image/' . $ext);
 		call_user_func_array('image' . $ext, array($this->srcPath));
 	}
 
