@@ -161,8 +161,8 @@ class akImage {
 				
 				// lost of quality maybe
 				if ($scale > 1 || $zoom) {
-					$newX = round($newX / $scale);
-					$newY = round($newY / $scale);
+					$newX = round(imagesx($image) / $scale);
+					$newY = round(imagesy($image) / $scale);
 				} else {
 					return $this->gdSave($image, $dst, $q);
 				}
