@@ -224,9 +224,8 @@ class akImage {
 			throw new akException('No GD found');
 		}
 		
-		header('Content-type: image/' . $ext);
-		
 		$ext = $this->extensionCheck($this->srcPath);
+		header('Content-type: image/' . $ext);
 		$image = call_user_func_array('imagecreatefrom' . $ext, array($this->srcPath));
 		call_user_func_array('image' . $ext, array($image));
 	}
