@@ -135,6 +135,11 @@ class akImage {
 						$size = sprintf('%ux%u', $x, $y);
 						break;
 				}
+				
+				/// @see http://www.imagemagick.org/Usage/resize/#shrink
+				if (!$zoom) {
+					$size .= '\>';
+				}
 			}
 			
 			// try resize
