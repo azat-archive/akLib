@@ -270,7 +270,7 @@ class akImage {
 	 * @throws akException
 	 */
 	protected function extensionCheck($path) {
-		$ext = akExec::getFileExt($path);
+		$ext = mb_strtolower(akExec::getFileExt($path));
 		// replace jpg to jpeg
 		if ($ext == 'jpg') $ext = 'jpeg';
 		
