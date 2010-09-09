@@ -78,6 +78,7 @@ class akCaptcha {
 	 * Case sensetive check for captcha exists
 	 * 
 	 * @see this::exists()
+	 * @see this::delete()
 	 * @var bool
 	 */
 	public $caseSensetive = false;
@@ -216,6 +217,7 @@ class akCaptcha {
 
 	/**
 	 * Check is such captcha exists
+	 * If exists than return true and delete it from list of captcha's
 	 * 
 	 * @see this::caseSensetive
 	 * @param string $value - value of captcha
@@ -223,10 +225,18 @@ class akCaptcha {
 	 */
 	public function exists($value) {
 		if ($this->caseSensetive) {
-			return in_array($value, $this->list);
+			if (in_array($value, $this->list)) {
+				$this->delete($value);
+				return true;
+			}
 		} else {
-			return in_array(mb_strtolower($value), array_map('mb_strtolower', $this->list));
+			if (in_array(mb_strtolower($value), array_map('mb_strtolower', $this->list))) {
+				$this->delete($value);
+				return true;
+			}
 		}
+		
+		return false;
 	}
 
 	/**
@@ -236,10 +246,14 @@ class akCaptcha {
 	 * @return bool (true - deleted, otherwise - false (i.e. if not found such captcha))
 	 */
 	public function delete($value) {
-		$key = array_search($value, $this->list);
-		if ($key !== false) {
-			unset($this->list[$key]);
-			return true;
+		if (!$value) return false;
+		
+		// because of caseSensetive option wee need use foreach
+		foreach ($this->list as $key => &$item) {
+			if (($this->caseSensetive && $item == $value) || (mb_strtolower($item) == mb_strtolower($value))) {
+				unset($this->list[$key]);
+				return true;
+			}
 		}
 		
 		// not found
