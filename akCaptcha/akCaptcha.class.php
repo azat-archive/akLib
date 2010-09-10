@@ -26,6 +26,25 @@ class akCaptcha {
 	 */
 	const sessionKey = 'akCaptcha';
 	/**
+	 * Type of CAPTCHA
+	 * 
+	 * Digits and letters
+	 * @default
+	 */
+	const digitsAndLetters = 1;
+	/**
+	 * Type of CAPTCHA
+	 * 
+	 * Only digits
+	 */
+	const onlyDigits = 2;
+	/**
+	 * Type of CAPTCHA
+	 * 
+	 * Only letters
+	 */
+	const onlyLetters = 3;
+	/**
 	 * Minimum captcha length
 	 * 
 	 * @var int
@@ -83,6 +102,16 @@ class akCaptcha {
 	 */
 	public $caseSensetive = false;
 	/**
+	 * Type of captcha
+	 * 
+	 * @see this::digitsAndLetters - default
+	 * @see this::onlyDigits
+	 * @see this::onlyLetters
+	 * 
+	 * @var int
+	 */
+	public $type;
+	/**
 	 * List with captcha's
 	 * 
 	 * @var link
@@ -96,11 +125,12 @@ class akCaptcha {
 	 * @see this::validate()
 	 * @return void
 	 */
-	public function __construct($minLength = null, $maxLength = null, $maxNum = null) {
+	public function __construct($minLength = null, $maxLength = null, $maxNum = null, $type = null) {
 		// properties
 		if ($minLength) $this->minLength = (int)$minLength;
 		if ($maxLength) $this->maxLength = (int)$maxLength;
 		if ($maxNum) $this->maxNum = (int)$maxNum;
+		$this->type = ($type ? $type : self::digitsAndLetters);
 		
 		$this->validate();
 		
@@ -126,18 +156,33 @@ class akCaptcha {
 	 * Generate random string
 	 * Only big leters
 	 * 
+	 * @see this::onlyDigits
+	 * @see this::onlyLetters
+	 * @see this::digitsAndLetters
+	 * 
 	 * @return string
 	 */
 	protected function randomString() {
 		$to = 0;
+		// not to have $to = 0
 		while ($to == 0) {
 			$to = rand($this->minLength, $this->maxLength);
 		}
 		
 		$string = '';
 		for ($i = 0; $i < $to; $i++) {
-			if (rand(1, 2) % 2 == 1) $string .= rand(1, 9);
-			else $string .= chr(rand(65, 90));
+			switch ($this->type) {
+				case self::onlyDigits:
+					$string .= rand(1, 9);
+					break;
+				case self::onlyLetters:
+					$string .= chr(rand(65, 90));
+					break;
+				default: // self::digitsAndLetters
+					if (rand(1, 2) % 2 == 1) $string .= rand(1, 9);
+					else $string .= chr(rand(65, 90));
+					break;
+			}
 		}
 		return $string;
 	}
