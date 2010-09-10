@@ -299,14 +299,18 @@ class akMySQLQuery {
 	 * @throws akException
 	 */
 	public function reConnect($usePingOnly = false) {
-		if (!mysql_ping($this->link)) {
-			if (!$usePingOnly) $this->connect(null, null, null, null, null, null, true);
-		}
-		if (!mysql_ping($this->link)) {
-			throw new akException('Can`t restore connection (%s)', mysql_error($this->link));
+		if (mysql_ping($this->link)) return $this;
+		
+		// trying to reconnect ...
+		if (!$usePingOnly) {
+			$this->connect(null, null, null, null, null, null, true);
+			if (mysql_ping($this->link)) {
+				return $this;
+			}
 		}
 		
-		return $this;
+		// default - error
+		throw new akException('Can`t restore connection (%s)', mysql_error($this->link));
 	}
 
 	/**
