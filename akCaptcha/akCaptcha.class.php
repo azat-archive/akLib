@@ -247,7 +247,7 @@ class akCaptcha {
 		// generate image
 		$captcha = imagecreatetruecolor($this->width, $this->height);
 		// colors
-		$fontColor = imagecolorallocate($captcha, $this->fontColor[0], $this->fontColor[3], $this->fontColor[2]);
+		$fontColor = imagecolorallocate($captcha, $this->fontColor[0], $this->fontColor[1], $this->fontColor[2]);
 		$bgColor = imagecolorallocate($captcha, $this->bgFontColor[0], $this->bgFontColor[1], $this->bgFontColor[2]);
 		// background
 		imagefill($captcha, 0, 0, $bgColor);
