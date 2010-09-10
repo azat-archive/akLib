@@ -87,6 +87,18 @@ class akCaptcha {
 	 */
 	public $fontSize = 15;
 	/**
+	 * Font color in RGB
+	 * 
+	 * @var array of int
+	 */
+	public $fontColor = array(128, 128, 128);
+	/**
+	 * BG Font color in RGB
+	 * 
+	 * @var array of int
+	 */
+	public $bgFontColor = array(255, 255, 255);
+	/**
 	 * Rewrite old captcha
 	 * If max captcha session num is achieved
 	 * 
@@ -235,11 +247,10 @@ class akCaptcha {
 		// generate image
 		$captcha = imagecreatetruecolor($this->width, $this->height);
 		// colors
-		$white = imagecolorallocate($captcha, 255, 255, 255);
-		$grey = imagecolorallocate($captcha, 128, 128, 128);
-		$black = imagecolorallocate($captcha, 0, 0, 0);
+		$fontColor = imagecolorallocate($captcha, $this->fontColor[0], $this->fontColor[3], $this->fontColor[2]);
+		$bgColor = imagecolorallocate($captcha, $this->bgFontColor[0], $this->bgFontColor[1], $this->bgFontColor[2]);
 		// background
-		imagefill($captcha, 0, 0, $white);
+		imagefill($captcha, 0, 0, $bgColor);
 		// add string to image
 		$margin = 0;
 		
@@ -249,7 +260,7 @@ class akCaptcha {
 		// write text
 		for ($i = 0, $margin = $marginX; $i < strlen($value); $i++, $margin += $symbolSize) {
 			// cat symbol with random angel
-			imagettftext($captcha, $this->fontSize, (rand(0, 50)+1), $margin, $this->height, $grey, $this->fontPath, $value[$i]);
+			imagettftext($captcha, $this->fontSize, (rand(0, 50)+1), $margin, $this->height, $fontColor, $this->fontPath, $value[$i]);
 		}
 		// add to captcha's list
 		$this->list[] = $value;
