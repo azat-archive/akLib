@@ -10,7 +10,7 @@
 /**
  * akExec - Working with processes
  * 
- * This class can start async process and non-async
+ * This class can start sync process and async
  * ######################################################
  * But remeber that process that are runing after complete or script are terminated automaticly (in os *nix),
  * because parent of runing program (your script) are closed
@@ -31,7 +31,7 @@ class akExec {
 	/**
 	 * Needable descriptors
 	 *
-	 * @see To run process async, STDERR must not be set, or set to file
+	 * @see To run process sync, STDERR must not be set, or set to file
 	 *
 	 * @var array
 	 */
@@ -122,7 +122,7 @@ class akExec {
 
 	/**
 	 * Start a process
-	 * This basicly is for ASync start
+	 * This basicly is for sync start
 	 * 
 	 * @see this::quickStart()
 	 * @param string $path - command to run
