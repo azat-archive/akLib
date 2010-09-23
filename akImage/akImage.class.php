@@ -126,7 +126,7 @@ class akImage {
 			if ($type !== null) {
 				switch ($type) {
 					case self::resizeByX:
-						$size = $x;
+						$size = $x . 'x';
 						break;
 					case self::resizeByY:
 						$size = 'x' . $y;
@@ -157,10 +157,10 @@ class akImage {
 						$scale = (imagesx($image) / $x);
 						break;
 					case self::resizeByY:
-						$scale = (imagesx($image) / $y);
+						$scale = (imagesy($image) / $y);
 						break;
 					case self::resizeByXY:
-						$scale = (imagesx($image) < imagesy($image) ? (imagesy($image) / $y) : (imagesx($image) / $x));
+						$scale = (imagesx($image) < imagesy($image) ? (imagesx($image) / $x) : (imagesy($image) / $y));
 						break;
 				}
 				
