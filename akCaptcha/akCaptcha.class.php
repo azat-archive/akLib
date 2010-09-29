@@ -124,6 +124,12 @@ class akCaptcha {
 	 */
 	public $type;
 	/**
+	 * Number of noise
+	 * 
+	 * @var int
+	 */
+	public $noiseNumber = 2;
+	/**
 	 * List with captcha's
 	 * 
 	 * @var link
@@ -262,6 +268,8 @@ class akCaptcha {
 			// cat symbol with random angel
 			imagettftext($captcha, $this->fontSize, (rand(0, 50)+1), $margin, $this->height, $fontColor, $this->fontPath, $value[$i]);
 		}
+		// add noise
+		$this->addNoise($captcha, $fontColor);
 		// add to captcha's list
 		$this->list[] = $value;
 		
@@ -269,6 +277,49 @@ class akCaptcha {
 		header('Content-type: image/png');
 		imagepng($captcha);
 		
+	}
+
+	/**
+	 * Add noise
+	 * 
+	 * @param resource $captcha - captcha GD resource
+	 * @param int $fontColor - font color
+	 * @return void
+	 */
+	protected function addNoise($captcha, $fontColor) {
+		for ($i = 0; $i < $this->noiseNumber; $i++) {
+			$y0 = ($i % 2 == 0 ? round(rand(0, $this->height/6)) : round(rand($this->height / 6, $this->height / 1.1)));
+			$y1 = ($i % 2 == 0 ? round($this->height / 1.1) : round($this->height / rand(8,9)));
+			
+			$this->imagelineThick($captcha, round(rand(0, $this->width / 6)), $y0, round($this->width - rand(0, $this->width / 5)), $y1, $fontColor, 2);
+		}
+	}
+
+	/**
+	 * this way it works well only for orthogonal lines
+	 * imagesetthickness($image, $thick);
+	 * return imageline($image, $x1, $y1, $x2, $y2, $color);
+	 * 
+	 * @link http://php.net/imageline
+	 */
+	protected function imagelineThick($image, $x1, $y1, $x2, $y2, $color, $thick = 1) {
+		if ($thick == 1) {
+			return imageline($image, $x1, $y1, $x2, $y2, $color);
+		}
+		$t = $thick / 2 - 0.5;
+		if ($x1 == $x2 || $y1 == $y2) {
+			return imagefilledrectangle($image, round(min($x1, $x2) - $t), round(min($y1, $y2) - $t), round(max($x1, $x2) + $t), round(max($y1, $y2) + $t), $color);
+		}
+		$k = ($y2 - $y1) / ($x2 - $x1); //y = kx + q
+		$a = $t / sqrt(1 + pow($k, 2));
+		$points = array(
+			round($x1 - (1+$k)*$a), round($y1 + (1-$k)*$a),
+			round($x1 - (1-$k)*$a), round($y1 - (1+$k)*$a),
+			round($x2 + (1+$k)*$a), round($y2 - (1-$k)*$a),
+			round($x2 + (1-$k)*$a), round($y2 + (1+$k)*$a),
+		);
+		imagefilledpolygon($image, $points, 4, $color);
+		return imagepolygon($image, $points, 4, $color);
 	}
 
 	/**
