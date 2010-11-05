@@ -196,7 +196,7 @@ class akMySQLQuery {
 		
 		$query = '';
 		foreach ($array as $key => $value) {
-			if (preg_match('@(?:\s+like|=|<|>|\(|in)@Uis', $key)) {
+			if (preg_match('@(?:\s+like|=|<|>|\(|\s+in)@Uis', $key)) {
 				$query .= sprintf('%s %s%s%s AND ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
 			} else {
 				$query .= sprintf('%s = %s%s%s AND ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
@@ -219,7 +219,7 @@ class akMySQLQuery {
 		
 		$query = '';
 		foreach ($array as $key => $value) {
-			if (preg_match('@(?:\s+like|=|<|>|\(|in)@Uis', $key)) {
+			if (preg_match('@(?:\s+like|=|<|>|\(|\s+in)@Uis', $key)) {
 				$query .= sprintf('%s %s%s%s OR ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
 			} else {
 				$query .= sprintf('%s = %s%s%s OR ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
@@ -265,7 +265,7 @@ class akMySQLQuery {
 		
 		$begin = microtime(true);
 		$this->result = mysql_query($query, $this->link);
-		akLog::getInstance(true, !$this->debug)::sadd(
+		akLog::getInstance(true, !$this->debug)->sadd(
 			'Query execute: %s [%.2f]%s',
 			$query, (microtime(true) - $begin), (!$this->result ? sprintf(' [%s]', mysql_error($this->link)) : null)
 		);
