@@ -20,6 +20,7 @@
  */
 
 require_once 'sys/akException.class.php';
+require_once 'akLog/akLog.class.php';
 
 class akMySQLQuery {
 	/**
@@ -64,6 +65,12 @@ class akMySQLQuery {
 	 * @var string
 	 */
 	protected $db;
+	/**
+	 * Debug (using akLog)
+	 * 
+	 * @var bool
+	 */
+	public $debug = true;
 
 
 	/**
@@ -189,7 +196,7 @@ class akMySQLQuery {
 		
 		$query = '';
 		foreach ($array as $key => $value) {
-			if (preg_match('@\s+like|=|\s+in@Uis', $key)) {
+			if (preg_match('@(?:\s+like|=|<|>|\(|in)@Uis', $key)) {
 				$query .= sprintf('%s %s%s%s AND ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
 			} else {
 				$query .= sprintf('%s = %s%s%s AND ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
@@ -212,7 +219,7 @@ class akMySQLQuery {
 		
 		$query = '';
 		foreach ($array as $key => $value) {
-			if (preg_match('@\s+like|=|\s+in@Uis', $key)) {
+			if (preg_match('@(?:\s+like|=|<|>|\(|in)@Uis', $key)) {
 				$query .= sprintf('%s %s%s%s OR ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
 			} else {
 				$query .= sprintf('%s = %s%s%s OR ', $key, $before, ($escape ? $this->escape($value) : $value), $after);
@@ -256,7 +263,12 @@ class akMySQLQuery {
 	public function query($query) {
 		if (!is_resource($this->link)) throw new akException('First init connection to MySQL server');
 		
+		$begin = microtime(true);
 		$this->result = mysql_query($query, $this->link);
+		akLog::getInstance(true, !$this->debug)::sadd(
+			'Query execute: %s [%.2f]%s',
+			$query, (microtime(true) - $begin), (!$this->result ? sprintf(' [%s]', mysql_error($this->link)) : null)
+		);
 		if (!$this->result) {
 			throw new akException(mysql_error($this->link));
 		}
