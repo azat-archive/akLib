@@ -21,8 +21,7 @@
 require_once 'sys/akException.class.php';
 
 class akEmptyLog {
-	function add() {}
-	function flush() {}
-	function get() {}
-	function cat() {}
+	public function __call($name, $arguments) {
+		return false;
+	}
 }

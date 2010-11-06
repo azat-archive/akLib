@@ -64,7 +64,7 @@ class akLog {
 	 * @param bool $empty - is only empty wrappers or not (default: false)
 	 * @return object of akEmptyLog or akLog
 	 */
-	function getInstance($registerAsShutdown = true, $empty = false) {
+	static function getInstance($registerAsShutdown = true, $empty = false) {
 		static $object;
 		if (!$object) {
 			if ($empty) $object = new akEmptyLog;
@@ -80,7 +80,7 @@ class akLog {
 	 * @param string $text - text
 	 * @return void
 	 */
-	function add($text) {
+	public function add($text) {
 		$trace = debug_backtrace();
 		
 		$this->items[] = array(
@@ -97,7 +97,7 @@ class akLog {
 	 * @param mixed $argN - 
 	 * @return void
 	 */
-	function sadd() {
+	public function sadd() {
 		$trace = debug_backtrace();
 		$args = func_get_args();
 		$text = array_shift($args);
@@ -112,7 +112,7 @@ class akLog {
 	 * 
 	 * @return void
 	 */
-	function flush() {
+	public function flush() {
 		unset($this->items);
 	}
 
@@ -121,7 +121,7 @@ class akLog {
 	 * 
 	 * @return array
 	 */
-	function get() {
+	public function get() {
 		return $this->items;
 	}
 
@@ -130,7 +130,7 @@ class akLog {
 	 * 
 	 * @return void
 	 */
-	function cat() {
+	public function cat() {
 		if (PHP_SAPI != 'cli') echo '<pre class="akLog">';
 		foreach ($this->items as &$item) {
 			printf('%100s [%20s:%u]' . "\n", $item[0], $item[1], $item[2]);
