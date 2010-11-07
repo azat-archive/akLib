@@ -220,7 +220,7 @@ class akDispatcher {
 	 * it must return text that it want to write to STDOUT
 	 * 
 	 * @param string $path - url/path
-	 * @param string $funcOrContent - function to run, or file to require, or formated string
+	 * @param mixed $funcOrContent - function to run, or file to require, or formated string
 	 * @param string $method - "get" or "post"
 	 * @return void
 	 * 
@@ -464,6 +464,27 @@ class akDispatcher {
 		} else {
 			ini_set('display_errors', 0);
 			error_reporting(E_ERROR | E_WARNING | E_PARSE);
+		}
+	}
+
+	/**
+	 * Redirect
+	 * 
+	 * @param string $url - url
+	 * @param mixed $status - status
+	 * @return void
+	 */
+	function redirect($url = null, $status = 'HTTP/1.1 301 Moved Permanently') {
+		if (!headers_sent() && $url) {
+			if (is_string($status) && !empty($status)) {
+				header($status);
+				header('Location: ' . $url);
+			} elseif (is_numeric($status) && $status > 0) {
+				header('Location: ' . $url, $status);
+			} else {
+				header('Location: ' . $url);
+			}
+			die;
 		}
 	}
 }
