@@ -8,6 +8,8 @@
  */
 
 /**
+ * BETA
+ * 
  * akCodeConvertor - Convert functions, methods, variables like this
  * @example function some_thing() => function someThing()
  * 

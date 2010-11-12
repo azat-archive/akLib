@@ -57,7 +57,7 @@ Small descriptions:
 		akLog/akEmptyLog.class.php - Empty log (just funtions-wrappers)
 		akLog/example.php - example of using
 
-	10. 
+	10. (BETA)
 		akCodeConverter/akCodeConverter.class.php - Convert system
 		akCodeConverter/cli.php - run from cli
 		akCodeConverter/example_in.php - what in
