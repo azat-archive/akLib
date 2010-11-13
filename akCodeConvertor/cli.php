@@ -61,7 +61,7 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 		// exclude functions
-		if ($argv[$i] == '--fexclude') {
+		elseif ($argv[$i] == '--fexclude') {
 			if (isset($argv[$i+1])) {
 				$excludeFunctions = array_merge($excludeFunctions, array_map('trim', preg_split('@[,]@Uis', $argv[$i+1])));
 				unset($argv[$i], $argv[$i+1]);
@@ -71,7 +71,7 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 		// exclude classes
-		if ($argv[$i] == '--cexclude') {
+		elseif ($argv[$i] == '--cexclude') {
 			if (isset($argv[$i+1])) {
 				$excludeClasses = array_merge($excludeClasses, array_map('trim', preg_split('@[,]@Uis', $argv[$i+1])));
 				unset($argv[$i], $argv[$i+1]);
@@ -81,7 +81,7 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 		// exclude vars
-		if ($argv[$i] == '--vexclude') {
+		elseif ($argv[$i] == '--vexclude') {
 			if (isset($argv[$i+1])) {
 				$excludeVars = array_merge($excludeVars, array_map('trim', preg_split('@[,]@Uis', $argv[$i+1])));
 				unset($argv[$i], $argv[$i+1]);
@@ -91,7 +91,7 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 		// case sensitive
-		if ($argv[$i] == '--case_sensitive') {
+		elseif ($argv[$i] == '--case_sensitive') {
 			if (isset($argv[$i+1])) {
 				$caseSensitive = (in_array($argv[$i+1], array('1', 'true', 'yes')) ? true : false);
 				unset($argv[$i], $argv[$i+1]);
@@ -101,7 +101,7 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 		// prefix
-		if ($argv[$i] == '--prefix') {
+		elseif ($argv[$i] == '--prefix') {
 			if (isset($argv[$i+1])) {
 				$prefix = $argv[$i+1];
 				unset($argv[$i], $argv[$i+1]);
@@ -111,8 +111,10 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 			}
 		}
 	}
+	// reset index
+	$argv = array_values($argv);
 	// exclude files
-	for ($i = 0; $i < count ($argv); $i++) {
+	for ($i = 0; $i < count($argv); $i++) {
 		if (in_array($argv[$i], $excludeFiles)) {
 			unset($argv[$i]);
 		}

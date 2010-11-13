@@ -177,6 +177,7 @@ class akCodeConvertor {
 	protected function replace($matches) {
 		$content = &$matches['content'];
 		// replace functions
+		/// @TODO not working right (if function is method - then this function doesn`t see what class, maybe thereis no need to replace this class)
 		$content = preg_replace_callback(
 			'@(?P<begin>(?:function\s*|))(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<end>\s*\()@is',
 			array(&$this, 'replaceFunctionsCallback'),
@@ -188,10 +189,10 @@ class akCodeConvertor {
 			array(&$this, 'replaceStaticMethodsCallback'),
 			$content
 		);
-		// class const
-		/// @TODO detect what class is it
+		// class const (PCRE recursion)
+		/// @TODO but only that constants that defined before functions
 		$content = preg_replace_callback(
-			'@(?P<begin>const\s*)(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)@is',
+			'@(?P<begin>class\s*(?P<class>[^\=\!\@\s\(\);\{]+)[^\}]+?)((?P<replacement>(?P<replacementBegin>const\s*)(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<replacementEnd>.+?))|(?P>replacement))@is',
 			array(&$this, 'replaceClassConst'),
 			$content
 		);
@@ -203,7 +204,7 @@ class akCodeConvertor {
 		);
 		// replace classes
 		$content = preg_replace_callback(
-			'@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);_]+_[^\!\@\s\(\);]+)@is',
+			'@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);\{_]+_[^\!\@\s\(\);\{]+)@is',
 			array(&$this, 'replaceClassesCallback'),
 			$content
 		);
@@ -248,12 +249,13 @@ class akCodeConvertor {
 	 * For class constants
 	 * 
 	 * @protected (public because of call as callback)
-	 * @TODO detect what class is it
 	 */
 	public function replaceClassConst($matches) {
+		$class = (!$this->caseSensitive ? mb_strtolower($matches['class']) : $matches['class']);
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
+		if (in_array($class, $this->classes)) return $matches['begin'] . $matches['replacement'];
 		
-		return $matches['begin'] . $this->nameReplace($matches['name']);
+		return $matches['begin'] . $matches['replacementBegin'] . $this->nameReplace($matches['name']) . $matches['replacementEnd'];
 	}
 
 	/**

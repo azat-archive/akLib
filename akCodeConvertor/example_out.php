@@ -15,7 +15,7 @@
  * @licence GPLv2
  */
 
-class a{
+class a {
 	function aA() {}
 	function bA() { return $bAResult; }
 }
@@ -23,8 +23,8 @@ class a{
 function popUp() {
 }
 
-class aA() {
-	const constTest = 'TEST_CONST';
+class a_a {
+	const const_test = 'TEST_CONST';
 	
 	static function testFuncStatic() {}
 	public function testFunc() {
@@ -33,7 +33,7 @@ class aA() {
 }
 
 aA::testFuncStatic();
-aA::constTest;
+a_a::const_test;
 $a = new aA();
 $a->testFunc();
 

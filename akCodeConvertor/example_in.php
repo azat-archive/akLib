@@ -15,7 +15,7 @@
  * @licence GPLv2
  */
 
-class a{
+class a {
 	function a_a() {}
 	function b_a() { return $b_a_result; }
 }
@@ -23,7 +23,7 @@ class a{
 function pop_up() {
 }
 
-class a_a() {
+class a_a {
 	const const_test = 'TEST_CONST';
 	
 	static function test_func_static() {}
