@@ -160,10 +160,10 @@ class akCodeConvertor {
 			// nothing to do with empty files
 			if (!$content) continue;
 			
-			$content = preg_replace_callback('@(?P<begin><\?\s|<\?php\s)(?P<content>.+)(?P<end>\s\?>|$)@Uis', array(&$this, 'replace'), $content);
+			$content = preg_replace_callback('@(?P<begin><\?\s|<\?php\s)(?P<content>.+)(?P<end>\s\?>|$)@is', array(&$this, 'replace'), $content);
 			// save changes
-			if (!file_put_contents($file . ($this->prefixForNewFiles ? $this->prefixForNewFiles : null), $content)) {
-				throw new akException(sprintf('Can`t write changes to file: %s', $file . $prefixForNewFiles));
+			if (!file_put_contents($file . $this->prefixForNewFiles, $content)) {
+				throw new akException(sprintf('Can`t write changes to file: %s', $file . $this->prefixForNewFiles));
 			}
 		}
 		return true;
@@ -179,32 +179,32 @@ class akCodeConvertor {
 		// replace functions
 		/// @TODO not working right (if function is method - then this function doesn`t see what class, maybe thereis no need to replace this class)
 		$content = preg_replace_callback(
-			'@(?P<begin>(?:function\s*|))(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<end>\s*\()@is',
+			'@(?P<begin>(?:function\s*|))(?P<name>[^\=\!\@\s\(\);_\']+_[^\=\!\@\s\(\);\']+)(?P<end>\s*\()@is',
 			array(&$this, 'replaceFunctionsCallback'),
 			$content
 		);
 		// static methods
 		$content = preg_replace_callback(
-			'@(?P<begin>(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*::\s*))(?P<name>[^\!\@\s\(\);]+)@is',
+			'@(?P<begin>(?P<class>[^\=\!\@\s\(\);\']+)(?P<delimiter>\s*::\s*))(?P<name>[^\!\@\s\(\);\']+)@is',
 			array(&$this, 'replaceStaticMethodsCallback'),
 			$content
 		);
 		// class const (PCRE recursion)
 		/// @TODO but only that constants that defined before functions
 		$content = preg_replace_callback(
-			'@(?P<begin>class\s*(?P<class>[^\=\!\@\s\(\);\{]+)[^\}]+?)((?P<replacement>(?P<replacementBegin>const\s*)(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<replacementEnd>.+?))|(?P>replacement))@is',
+			'@(?P<begin>class\s*(?P<class>[^\=\!\@\s\(\);\{\']+)[^\}]+?)((?P<replacement>(?P<replacementBegin>const\s*)(?P<name>[^\=\!\@\s\(\);_\']+_[^\=\!\@\s\(\);\']+)(?P<replacementEnd>.+?))|(?P>replacement))@is',
 			array(&$this, 'replaceClassConst'),
 			$content
 		);
 		// methods
 		$content = preg_replace_callback(
-			'@(?P<begin>\$(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*->\s*))(?P<name>[^\!\@\s\(\);]+)@is',
+			'@(?P<begin>\$(?P<class>[^\=\!\@\s\(\);\']+)(?P<delimiter>\s*->\s*))(?P<name>[^\!\@\s\(\);\']+)@is',
 			array(&$this, 'replaceMethodsCallback'),
 			$content
 		);
 		// replace classes
 		$content = preg_replace_callback(
-			'@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);\{_]+_[^\!\@\s\(\);\{]+)@is',
+			'@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);\{_\']+_[^\!\@\s\(\);\{\']+)@is',
 			array(&$this, 'replaceClassesCallback'),
 			$content
 		);
