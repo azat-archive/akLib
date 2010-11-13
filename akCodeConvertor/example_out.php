@@ -24,21 +24,24 @@ function popUp() {
 }
 
 class aA() {
-	function s() {}
+	const constTest = 'TEST_CONST';
+	
+	static function testFuncStatic() {}
+	public function testFunc() {
+		return self::testFuncStatic();
+	}
 }
 
-aA::s();
+aA::testFuncStatic();
+aA::constTest;
 $a = new aA();
-$a->s();
-
-aA::s();
-$aA = new aA();
-$aA->s();
+$a->testFunc();
 
 var_dump($_SERVER);
-function_exists('a');
-if (!function_exists('file_put_contents')) {
-	var_dump('nope');
-}
-
 testTest();
+
+?>
+NOT_REPLACE_THIS();
+<?
+butThisReplace();
+?>

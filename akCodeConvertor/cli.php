@@ -24,7 +24,7 @@ if (mb_strtolower(PHP_SAPI) != 'cli') throw new akException('Must run from CLI (
 
 $help = <<<EOL
 	Usage:
-	cli.php [--exclude] [--fexclude] [--cexclude] [--vexclude] file1[ file2[...]]
+	cli.php [--exclude] [--fexclude] [--cexclude] [--vexclude] [--prefix] file1[ file2[...]]
 	
 	Example:
 	cli.php --exclude a_a a.php b.php
@@ -35,12 +35,14 @@ $help = <<<EOL
 	--cexclude class_name[,function_name] - Not convert this class
 	--vexclude var_name[,function_name] - Not convert this vars
 	--case_sensitive 1|0|true|false|yes|not - case sensetive or not (default: not)
+	--prefix - prefix for new files (if not prefix - rewrite files)
 	
 	--help see this page
 
 EOL;
 $excludeFiles = $excludeFunctions = $excludeClasses = $excludeVars = array();
 $caseSensitive = false;
+$prefix = null;
 $scriptName = array_shift($argv);
 
 if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
@@ -98,6 +100,16 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 				throw new akException('--case_sensitive option require an argument');
 			}
 		}
+		// prefix
+		if ($argv[$i] == '--prefix') {
+			if (isset($argv[$i+1])) {
+				$prefix = $argv[$i+1];
+				unset($argv[$i], $argv[$i+1]);
+				$i++;
+			} else {
+				throw new akException('--prefix option require an argument');
+			}
+		}
 	}
 	// exclude files
 	for ($i = 0; $i < count ($argv); $i++) {
@@ -106,6 +118,14 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 		}
 	}
 	
+	// scalar options
+	printf('Case sensetive: %u' . "\n", $caseSensitive);
+	if ($prefix) {
+		printf('Prefix: %s' . "\n", $prefix);
+	} else {
+		echo 'Changes will be writen to existed files!' . "\n";
+	}
+	// non-scalar options
 	if ($excludeFunctions) {
 		echo 'Exclude next functions: ' . "\n";
 		var_dump($excludeFunctions);
@@ -122,12 +142,14 @@ if ((count($argv) == 1 && $argv[0] == '--help') || (count($argv) == 0)) {
 		echo 'Exclude files: ' . "\n";
 		var_dump($excludeFiles);
 	}
+	// files to convert
 	echo 'Files: ' . "\n";
 	var_dump($argv);
-	printf('Case sensetive: %u' . "\n", $caseSensitive);
 	
-	$converter = akCodeConvertor::getInstance($argv, $excludeFunctions, $excludeClasses, $excludeVars, $caseSensitive)->run();
-	if ($converter) {
+	$converter = akCodeConvertor::getInstance($argv, $excludeFunctions, $excludeClasses, $excludeVars, $caseSensitive);
+	$converter->prefixForNewFiles = $prefix;
+	$status = $converter->run();
+	if ($status) {
 		echo 'All files are parsed' . "\n";
 	}
 }

@@ -90,6 +90,12 @@ class akCodeConvertor {
 	 * @var bool
 	 */
 	public $caseSensitive = false;
+	/**
+	 * Prefix for new files (of not prefix is - rewrite files)
+	 * 
+	 * @var string
+	 */
+	public $prefixForNewFiles = '.new';
 
 	/**
 	 * Init
@@ -146,8 +152,18 @@ class akCodeConvertor {
 		}
 		
 		foreach ($this->files as &$file) {
-			if (!$this->replace($file)) {
-				throw new akException(sprintf('An error is occured while convert file: %s', $file));
+			if (!file_exists($file)) throw new akException(sprintf('File: %s is not exist', $file));
+			if (!is_readable($file)) throw new akException(sprintf('File: %s is not readable', $file));
+			if (!is_writable($file)) throw new akException(sprintf('File: %s is not writable', $file));
+			
+			$content = file_get_contents($file);
+			// nothing to do with empty files
+			if (!$content) continue;
+			
+			$content = preg_replace_callback('@(?P<begin><\?\s|<\?php\s)(?P<content>.+)(?P<end>\s\?>|$)@Uis', array(&$this, 'replace'), $content);
+			// save changes
+			if (!file_put_contents($file . ($this->prefixForNewFiles ? $this->prefixForNewFiles : null), $content)) {
+				throw new akException(sprintf('Can`t write changes to file: %s', $file . $prefixForNewFiles));
 			}
 		}
 		return true;
@@ -158,24 +174,46 @@ class akCodeConvertor {
 	 * 
 	 * @return bool
 	 */
-	protected function replace($file) {
-		if (!file_exists($file) || !is_readable($file)) return false;
-		
-		$content = file_get_contents($file);
-		if (empty($content) && $content !== false) return true;
-		
+	protected function replace($matches) {
+		$content = &$matches['content'];
 		// replace functions
-		$content = preg_replace_callback('@(?P<begin>(?:function\s*|))(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<end>\s*\()@is', array(&$this, 'replaceFunctionsCallback'), $content);
+		$content = preg_replace_callback(
+			'@(?P<begin>(?:function\s*|))(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)(?P<end>\s*\()@is',
+			array(&$this, 'replaceFunctionsCallback'),
+			$content
+		);
 		// static methods
-		$content = preg_replace_callback('@(?P<begin>(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*::\s*))(?P<name>[^\!\@\s\(\);]+)@is', array(&$this, 'replaceStaticMethodsCallback'), $content);
+		$content = preg_replace_callback(
+			'@(?P<begin>(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*::\s*))(?P<name>[^\!\@\s\(\);]+)@is',
+			array(&$this, 'replaceStaticMethodsCallback'),
+			$content
+		);
+		// class const
+		/// @TODO detect what class is it
+		$content = preg_replace_callback(
+			'@(?P<begin>const\s*)(?P<name>[^\=\!\@\s\(\);_]+_[^\=\!\@\s\(\);]+)@is',
+			array(&$this, 'replaceClassConst'),
+			$content
+		);
 		// methods
-		$content = preg_replace_callback('@(?P<begin>\$(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*->\s*))(?P<name>[^\!\@\s\(\);]+)@is', array(&$this, 'replaceMethodsCallback'), $content);
+		$content = preg_replace_callback(
+			'@(?P<begin>\$(?P<class>[^\=\!\@\s\(\);]+)(?P<delimiter>\s*->\s*))(?P<name>[^\!\@\s\(\);]+)@is',
+			array(&$this, 'replaceMethodsCallback'),
+			$content
+		);
 		// replace classes
-		$content = preg_replace_callback('@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);_]+_[^\!\@\s\(\);]+)@is', array(&$this, 'replaceClassesCallback'), $content);
+		$content = preg_replace_callback(
+			'@(?P<begin>(?:class|new|clone|extends|implements|interface)\s*)(?P<name>[^\!\@\s\(\);_]+_[^\!\@\s\(\);]+)@is',
+			array(&$this, 'replaceClassesCallback'),
+			$content
+		);
 		// replace vars
-		$content = preg_replace_callback('@\$(?P<name>[^\=\!\@\s\(\);\[\]]+)(?P<delimiter>\s*)(?P<key>\[[^\s\(\);]+\]|)@is', array(&$this, 'replaceVarsCallback'), $content);
-		
-		return file_put_contents($file, $content);
+		$content = preg_replace_callback(
+			'@\$(?P<name>[^\=\!\@\s\(\);\[\]]+)(?P<delimiter>\s*)(?P<key>\[[^\s\(\);]+\]|)@is',
+			array(&$this, 'replaceVarsCallback'),
+			$content
+		);
+		return $matches['begin'] . $content . $matches['end'];
 	}
 
 	/**
@@ -188,7 +226,7 @@ class akCodeConvertor {
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
 		if (in_array($name, $this->functions)) return $matches['begin'] . $matches['name'] . $matches['end'];
 		
-		return $matches['begin'] . preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['name']) . $matches['end'];
+		return $matches['begin'] . $this->nameReplace($matches['name']) . $matches['end'];
 	}
 
 	/**
@@ -202,10 +240,20 @@ class akCodeConvertor {
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
 		if (in_array($class, $this->classes) || in_array($name, $this->functions)) return $matches['begin'] . $matches['name'];
 		
-		return
-			preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['class']) .
-			$matches['delimiter'] .
-			preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['name']);
+		return $this->nameReplace($matches['class']) . $matches['delimiter'] . $this->nameReplace($matches['name']);
+	}
+
+	/**
+	 * Callback for $this::replace() -> preg_replace_callback()
+	 * For class constants
+	 * 
+	 * @protected (public because of call as callback)
+	 * @TODO detect what class is it
+	 */
+	public function replaceClassConst($matches) {
+		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
+		
+		return $matches['begin'] . $this->nameReplace($matches['name']);
 	}
 
 	/**
@@ -219,11 +267,7 @@ class akCodeConvertor {
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
 		if (in_array($class, $this->vars) || in_array($name, $this->functions)) return $matches['begin'] . $matches['name'];
 		
-		return
-			'$' .
-			preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['class']) .
-			$matches['delimiter'] .
-			preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['name']);
+		return '$' . $this->nameReplace($matches['class']) . $matches['delimiter'] . $this->nameReplace($matches['name']);
 	}
 
 	/**
@@ -236,7 +280,7 @@ class akCodeConvertor {
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
 		if (in_array($name, $this->classes)) return $matches['begin'] . $matches['name'];
 		
-		return $matches['begin'] . preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['name']);
+		return $matches['begin'] . $this->nameReplace($matches['name']);
 	}
 
 	/**
@@ -249,11 +293,17 @@ class akCodeConvertor {
 		$name = (!$this->caseSensitive ? mb_strtolower($matches['name']) : $matches['name']);
 		if (in_array($name, $this->vars) || in_array($matches['key'], $this->defaultVars)) return '$' . $matches['name'] . $matches['delimiter'] . $matches['key'];
 		
-		return
-			'$' . 
-			preg_replace_callback('@(_)(\S)@Uis', array($this, 'mbStrToUpperCallback'), $matches['name']) .
-			$matches['delimiter'] .
-			($matches['key'] ? preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $matches['key']) : null);
+		return '$' . $this->nameReplace($matches['name']) . $matches['delimiter'] . ($matches['key'] ? $this->nameReplace($matches['key']) : null);
+	}
+
+	/**
+	 * For PCRE callbacks
+	 * Replace "a_a" to "aA"
+	 * 
+	 * @return string
+	 */
+	protected function nameReplace($name) {
+		return preg_replace_callback('@(_)([a-z])@Uis', array($this, 'mbStrToUpperCallback'), $name);
 	}
 
 	/**

@@ -24,21 +24,24 @@ function pop_up() {
 }
 
 class a_a() {
-	function s() {}
+	const const_test = 'TEST_CONST';
+	
+	static function test_func_static() {}
+	public function test_func() {
+		return self::test_func_static();
+	}
 }
 
-a_a::s();
+a_a::test_func_static();
+a_a::const_test;
 $a = new a_a();
-$a->s();
-
-a_a::s();
-$a_a = new a_a();
-$a_a->s();
+$a->test_func();
 
 var_dump($_SERVER);
-function_exists('a');
-if (!function_exists('file_put_contents')) {
-	var_dump('nope');
-}
-
 test_test();
+
+?>
+NOT_REPLACE_THIS();
+<?
+but_this_replace();
+?>
