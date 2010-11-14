@@ -96,6 +96,18 @@ class akCodeConvertor {
 	 * @var string
 	 */
 	public $prefixForNewFiles = '.new';
+	/**
+	 * @link http://ru.php.net/manual/en/pcre.configuration.php#ini.pcre.backtrack-limit
+	 * 
+	 * @var int
+	 */
+	public $oldBacktraceLimit;
+	/**
+	 * @link http://ru.php.net/manual/en/pcre.configuration.php#ini.pcre.recursion-limit
+	 * 
+	 * @var int
+	 */
+	public $oldRecursionLimit;
 
 	/**
 	 * Init
@@ -117,6 +129,19 @@ class akCodeConvertor {
 		$this->defaultFunctions = $this->defaultFunctions['internal'];
 		$this->defaultClasses = get_declared_classes();
 		$this->defaultVars = array('_POST', '_GET', '_COOKIE', '_REQUEST', '_SERVER', '_ENV', '_FILES', '_SESSION', 'argv', 'argc');
+		
+		$this->oldBacktraceLimit = ini_set('pcre.backtrack_limit', 10000000);
+		$this->oldRecursionLimit = ini_set('pcre.recursion_limit', 10000000);
+	}
+	
+	/**
+	 * Dectructor
+	 * 
+	 * @return void
+	 */
+	public function __destruct() {
+		ini_set('pcre.backtrack_limit', $this->oldBacktraceLimit);
+		ini_set('pcre.recursion_limit', $this->oldRecursionLimit);
 	}
 
 	/**
@@ -191,6 +216,11 @@ class akCodeConvertor {
 		);
 		// class const (PCRE recursion)
 		/// @TODO but only that constants that defined before functions
+		preg_match_all(
+			'@(?P<begin>class\s*(?P<class>[^\=\!\@\s\(\);\{\']+)[^\}]+?)((?P<replacement>(?P<replacementBegin>const\s*)(?P<name>[^\=\!\@\s\(\);_\']+_[^\=\!\@\s\(\);\']+)(?P<replacementEnd>.+?))|(?P>replacement))@is',
+			$content,
+			$m
+		);
 		$content = preg_replace_callback(
 			'@(?P<begin>class\s*(?P<class>[^\=\!\@\s\(\);\{\']+)[^\}]+?)((?P<replacement>(?P<replacementBegin>const\s*)(?P<name>[^\=\!\@\s\(\);_\']+_[^\=\!\@\s\(\);\']+)(?P<replacementEnd>.+?))|(?P>replacement))@is',
 			array(&$this, 'replaceClassConst'),
