@@ -10,11 +10,6 @@
 /**
  * akDispatcher - Path dispatcher system
  * 
- * ######################################################
- * The callback functions must not to write some thing to STDOUT,
- * it must return text that it want to write to STDOUT
- * ######################################################
- * 
  * @author Azat Khuzhin <dohardgopro@gmail.com>
  * @package akLib
  * @licence GPLv2
@@ -121,6 +116,24 @@ class akDispatcher {
 	 * @var string
 	 */
 	protected $type = 'html';
+	/**
+	 * Callbacks returns content not print by it selfs, otherwise callback print it by it self
+	 * 
+	 * @var bool
+	 * @default true
+	 */
+	public $functionReturnsContent = true;
+	/**
+	 * Final route
+	 * 
+	 * Before this function print headers & execute beforeCallback, at the end of function execute: execute afterCallback & print result
+	 */
+	const FINAL_ROUTE = 1;
+	/**
+	 * Not final route
+	 * Just execute a function
+	 */
+	const NOT_FINAL_ROUTE = 2;
 
 
 	/**
@@ -163,79 +176,36 @@ class akDispatcher {
 	}
 
 	/**
-	 * Trunsfer path to pattern
-	 * 
-	 * @param string $path - path
-	 * @return string
-	 * 
-	 * @example "/main/:param" => /main/asd ("asd" will be remember) or /main/123 ("123" will be remember)
-	 * 
-	 * @throws akException
-	 */
-	protected function pattern($path) {
-		$path = $this->quote($path, array($this->delimiter, $this->additionalParamDelimiter, '/'));
-		
-		// delimiter
-		static $quotedDelimiter;
-		if (!$quotedDelimiter) {
-			$quotedDelimiter = $this->quote($this->delimiter . $this->additionalParamDelimiter, array('/', $this->delimiter, $this->additionalParamDelimiter));
-		}
-		
-		$path = preg_replace(
-			sprintf('/\\\\\:([^\:%s\\\]+)/is', $quotedDelimiter),
-			sprintf('(?P<\1>[^\:%s]+)', $quotedDelimiter),
-			$path
-		);
-		
-		return sprintf('/^%s$/is', $path);
-	}
-
-	/**
-	 * PCRE quote
-	 * 
-	 * @param string $unquotedString
-	 * @param mixed $delimiters
-	 * @return string
-	 */
-	protected function quote($unquotedString, $delimiters) {
-		if (is_scalar($delimiters)) $delimiters = array($delimiters);
-		elseif (is_array($delimiters)) $delimiters = array_unique($delimiters);
-		
-		$unquotedString = preg_quote($unquotedString);
-		
-		foreach ($delimiters as $delimiter) {
-			// see if preg_quote is already quoted this symbol
-			if (preg_quote($delimiter) == '\\' . $delimiter) continue;
-			
-			$unquotedString = str_replace($delimiter, '\\' . $delimiter, $unquotedString);
-		}
-		return $unquotedString;
-	}
-
-	/**
 	 * Add event
 	 * 
 	 * If param $funcOrContent is a function,
 	 * than it must not to write some thing to STDOUT,
 	 * it must return text that it want to write to STDOUT
 	 * 
-	 * @param string $path - url/path
+	 * @param mixed $path
 	 * @param mixed $funcOrContent - function to run, or file to require, or formated string
-	 * @param string $method - "get" or "post"
+	 * @param string $method - "get" or "post" or "both", both - for both methods
+	 * @param int $type - type (@see this::NOT_FINAL_ROUTE, this::FINAL_ROUTE)
 	 * @return void
 	 * 
 	 * @link http://php.net/callback
 	 * 
 	 * @throws akException
 	 */
-	public function add($path, $funcOrContent, $method = 'get') {
-		if (!in_array($method, array('get', 'post'))) throw new akException('Method must be "get" or "post"');
+	public function add($path, $funcOrContent, $method = 'get', $type = self::FINAL_ROUTE) {
+		$method = mb_strtolower($method);
+		if (!in_array($method, array('get', 'post', 'both'))) throw new akException('Method must be "get" or "post" or "both"');
+		if (!in_array($type, array(self::FINAL_ROUTE, self::NOT_FINAL_ROUTE))) throw new akException('Not supported type');
 		
-		$this->events[] = array(
-			'path' => $path,
-			'funcOrContent' => $funcOrContent,
-			'method' => mb_strtolower($method),
-		);
+		if (is_scalar($path)) $path = array($path);
+		foreach ($path as &$p) {
+			$this->events[] = array(
+				'path' => $p,
+				'funcOrContent' => $funcOrContent,
+				'method' => $method,
+				'type' => (int)$type,
+			);
+		}
 	}
 
 	/**
@@ -249,11 +219,15 @@ class akDispatcher {
 	 */
 	public function run() {
 		if (count($this->events) <= 0) throw new akException('No events found');
+		$this->sortEvents();
 		
 		// run by all events and detect needable
 		foreach ($this->events as &$event) {
+			// flush array
+			$this->params = array();
+			
 			// founded
-			if (preg_match($this->pattern($event['path']), $this->requestQuery, $matches) && $event['method'] == $this->requestMethod) {
+			if (preg_match($this->pattern($event['path']), $this->requestQuery, $matches) && ($event['method'] == $this->requestMethod || $event['method'] == 'both')) {
 				// delete numeric params
 				// first delete than add,
 				// because we need to call user func with only string keys
@@ -263,6 +237,12 @@ class akDispatcher {
 				// add string params to param list
 				foreach ($matches as $key => &$value) {
 					$this->params[$key] = $value;
+				}
+				
+				// not final route
+				if ($event['type'] == self::NOT_FINAL_ROUTE) {
+					$this->params ? call_user_func_array($event['funcOrContent'], $this->params) : call_user_func($event['funcOrContent']);
+					continue;
 				}
 				
 				$content = '';
@@ -279,7 +259,7 @@ class akDispatcher {
 				}
 				if ($this->afterCallback) $content .= call_user_func($this->afterCallback);
 				
-				if ($content) echo $content;
+				if ($content && $this->functionReturnsContent) echo $content;
 				return true;
 			}
 		}
@@ -288,17 +268,8 @@ class akDispatcher {
 		
 		$this->headers();
 		$content = call_user_func($this->defaultCallback);
-		echo $content;
+		if ($this->functionReturnsContent) echo $content;
 		return true;
-	}
-
-	/**
-	 * Send headers if not send yet
-	 * 
-	 * @return void
-	 */
-	protected function headers() {
-		if (!headers_sent() && $this->type) header(sprintf('Content-type: text/%s; charset=%s', $this->type, $this->charset));
 	}
 
 	/**
@@ -474,7 +445,7 @@ class akDispatcher {
 	 * @param mixed $status - status
 	 * @return void
 	 */
-	function redirect($url = null, $status = 'HTTP/1.1 301 Moved Permanently') {
+	public function redirect($url = null, $status = 'HTTP/1.1 301 Moved Permanently') {
 		if (!headers_sent() && $url) {
 			if (is_string($status) && !empty($status)) {
 				header($status);
@@ -486,5 +457,98 @@ class akDispatcher {
 			}
 			die;
 		}
+	}
+
+	/**
+	 * Trunsfer path to pattern
+	 * 
+	 * @param string $path - path
+	 * @return string
+	 * 
+	 * @example "/main/:param" => /main/asd ("asd" will be remember) or /main/123 ("123" will be remember)
+	 * @example "/main*"  - What your whant at the end - /main/asdasd or /main/as/asd or /main
+	 * @example "/main/+"  - /main/asda or /main/asda1 but not /main/
+	 * 
+	 * @throws akException
+	 */
+	protected function pattern($path) {
+		$path = $this->quote($path, array($this->delimiter, $this->additionalParamDelimiter, '/'));
+		
+		// delimiter
+		static $quotedDelimiter;
+		if (!$quotedDelimiter) {
+			$quotedDelimiter = $this->quote($this->delimiter . $this->additionalParamDelimiter, array('/', $this->delimiter, $this->additionalParamDelimiter));
+		}
+		
+		$path = preg_replace(
+			sprintf('/\\\\\:([^\:%s\\\]+)/is', $quotedDelimiter),
+			sprintf('(?P<\1>[^\:%s]+)', $quotedDelimiter),
+			$path
+		);
+		// quantifiers [what your whant]
+		$path = strtr($path, array('\*' => '.*', '\?' => '.', '\+' => '.+'));
+		
+		return sprintf('/^%s$/is', $path);
+	}
+
+	/**
+	 * PCRE quote
+	 * 
+	 * @param string $unquotedString
+	 * @param mixed $delimiters
+	 * @return string
+	 */
+	protected function quote($unquotedString, $delimiters) {
+		if (is_scalar($delimiters)) $delimiters = array($delimiters);
+		elseif (is_array($delimiters)) $delimiters = array_unique($delimiters);
+		
+		$unquotedString = preg_quote($unquotedString);
+		
+		foreach ($delimiters as $delimiter) {
+			// see if preg_quote is already quoted this symbol
+			if (preg_quote($delimiter) == '\\' . $delimiter) continue;
+			
+			$unquotedString = str_replace($delimiter, '\\' . $delimiter, $unquotedString);
+		}
+		return $unquotedString;
+	}
+
+	/**
+	 * Send headers if not send yet
+	 * 
+	 * @return void
+	 */
+	protected function headers() {
+		if (!headers_sent() && $this->type) header(sprintf('Content-type: text/%s; charset=%s', $this->type, $this->charset));
+	}
+
+	/**
+	 * Sort events
+	 * This method is needable! (for right routes detect)
+	 * 
+	 * @return void
+	 */
+	protected function sortEvents() {
+		usort($this->events, array(&$this, '_compare'));
+	}
+
+	/**
+	 * Compare for sortEvents [sort strings]
+	 * 
+	 * @param mixed $a
+	 * @param mixed $b
+	 * @return int
+	 * 
+	 * @protected
+	 */
+	public function _compare(&$a, &$b) {
+		// not final - up
+		if ($a['type'] == self::NOT_FINAL_ROUTE) return -1;
+		if ($b['type'] == self::NOT_FINAL_ROUTE) return 1;
+		// if less characters of ":" - up
+		$n1 = substr_count($a['path'], ':');
+		$n2 = substr_count($b['path'], ':');
+		if ($n1 === $n2) return 0;
+		return ($n1 > $n2);
 	}
 }

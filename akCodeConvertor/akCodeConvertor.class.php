@@ -185,7 +185,7 @@ class akCodeConvertor {
 			// nothing to do with empty files
 			if (!$content) continue;
 			
-			$content = preg_replace_callback('@(?P<begin><\?\s|<\?php\s)(?P<content>.+)(?P<end>\s\?>|$)@is', array(&$this, 'replace'), $content);
+			$content = preg_replace_callback('@(?P<begin><\?|<\?php\s)(?P<content>.+)(?P<end>\?>|$)@Uis', array(&$this, 'replace'), $content);
 			// save changes
 			if (!file_put_contents($file . $this->prefixForNewFiles, $content)) {
 				throw new akException(sprintf('Can`t write changes to file: %s', $file . $this->prefixForNewFiles));
@@ -200,6 +200,8 @@ class akCodeConvertor {
 	 * @return bool
 	 */
 	protected function replace($matches) {
+		static $braces = '\{((?>[^{}]+)|(?R))*\}';
+		
 		$content = &$matches['content'];
 		// replace functions
 		/// @TODO not working right (if function is method - then this function doesn`t see what class, maybe thereis no need to replace this class)

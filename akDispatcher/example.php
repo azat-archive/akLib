@@ -47,5 +47,6 @@ $dispatcher->add('/akDispatcher/te[]st/c/:param1/:param2', 'c');
 // the right events
 $dispatcher->add('/akDispatcher/test/b', 'b');
 $dispatcher->add('/akDispatcher/test/:first_:second', 'multi'); // see akDispatcher::additionalParamDelimiter
+$dispatcher->add('/akDispatcher/whatYouWhant/*', 'multi'); // quantifier
 
 $dispatcher->run();

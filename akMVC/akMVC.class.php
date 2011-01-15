@@ -74,25 +74,32 @@ class akMVC extends akDispatcher {
 	 * than it must not to write some thing to STDOUT,
 	 * it must return text that it want to write to STDOUT
 	 * 
-	 * @param string $path - url/path
+	 * @param mixed $path - urls/paths
 	 * @param string $controller - controller file
 	 * @param string $funcOrContent - function to run, or file to require, or formated string
-	 * @param string $method - "get" or "post"
+	 * @param string $method - "get" or "post" or "both", both - for both methods
+	 * @param int $type - type (@see this::NOT_FINAL_ROUTE, this::FINAL_ROUTE)
 	 * @return void
 	 * 
 	 * @link http://php.net/callback
 	 * 
 	 * @throws akException
 	 */
-	public function add($path, $controller, $funcOrContent, $method = 'get') {
-		if (!in_array($method, array('get', 'post'))) throw new akException('Method must be "get" or "post"');
+	public function add($path, $controller, $funcOrContent, $method = 'get', $type = self::FINAL_ROUTE) {
+		$method = mb_strtolower($method);
+		if (!in_array($method, array('get', 'post', 'both'))) throw new akException('Method must be "get" or "post" or "both"');
+		if (!in_array($type, array(self::FINAL_ROUTE, self::NOT_FINAL_ROUTE))) throw new akException('Not supported type');
 		
-		$this->events[] = array(
-			'path' => $path,
-			'controller' => $controller,
-			'funcOrContent' => $funcOrContent,
-			'method' => mb_strtolower($method),
-		);
+		if (is_scalar($path)) $path = array($path);
+		foreach ($path as &$p) {
+			$this->events[] = array(
+				'path' => $p,
+				'controller' => $controller,
+				'funcOrContent' => $funcOrContent,
+				'method' => $method,
+				'type' => (int)$type,
+			);
+		}
 	}
 
 	/**
@@ -110,11 +117,15 @@ class akMVC extends akDispatcher {
 	 */
 	public function run() {
 		if (count($this->events) <= 0) throw new akException('No events found');
+		$this->sortEvents();
 		
 		// run by all events and detect needable
 		foreach ($this->events as &$event) {
+			// flush array
+			$this->params = array();
+			
 			// founded
-			if (preg_match($this->pattern($event['path']), $this->requestQuery, $matches) && $event['method'] == $this->requestMethod) {
+			if (preg_match($this->pattern($event['path']), $this->requestQuery, $matches) && ($event['method'] == $this->requestMethod || $event['method'] == 'both')) {
 				// delete numeric params
 				// first delete than add,
 				// because we need to call user func with only string keys
@@ -133,6 +144,12 @@ class akMVC extends akDispatcher {
 					throw new akException(sprintf('Controller "%s" is not readable or not exists (see %s::pathControllers)', $event['controller'], __CLASS__));
 				}
 				
+				// not final route
+				if ($event['type'] == akDispatcher::NOT_FINAL_ROUTE) {
+					$this->params ? call_user_func_array($event['funcOrContent'], $this->params) : call_user_func($event['funcOrContent']);
+					continue;
+				}
+				
 				$content = '';
 				if ($this->beforeCallback) $content .= call_user_func($this->beforeCallback);
 				// function or content
@@ -147,7 +164,7 @@ class akMVC extends akDispatcher {
 				}
 				if ($this->afterCallback) $content .= call_user_func($this->afterCallback);
 				
-				if ($content) echo $content;
+				if ($content && $this->functionReturnsContent) echo $content;
 				return true;
 			}
 		}
@@ -156,7 +173,7 @@ class akMVC extends akDispatcher {
 		
 		$this->headers();
 		$content = call_user_func($this->defaultCallback);
-		echo $content;
+		if ($this->functionReturnsContent) echo $content;
 		return true;
 	}
 
@@ -201,11 +218,7 @@ class akMVC extends akDispatcher {
 		$model = $this->pathModels . $path;
 		if (!is_readable($model)) throw new akException(sprintf('Model "%s" is not readable or not exists! (see %s::pathModels)', $path, __CLASS__));
 		
-		if ($once) {
-			require_once $model;
-		} else {
-			require $model;
-		}
+		$once ? require_once $model : require $model;
 	}
 
 	/**
@@ -217,7 +230,7 @@ class akMVC extends akDispatcher {
 	 * @return void
 	 */
 	public function setPaths($models = null, $views = null, $controllers = null) {
-		if ($models) {
+		if (!is_null($models)) {
 			if (!is_dir($models)) $models = realpath(sprintf('%s/%s', $_SERVER['DOCUMENT_ROOT'], $models));
 			if (mb_substr($models, -1) != '/') $models .= '/';
 			
@@ -228,7 +241,7 @@ class akMVC extends akDispatcher {
 				throw new akException(sprintf('Path "%s" is not readable', $this->pathModels));
 			}
 		}
-		if ($views) {
+		if (!is_null($views)) {
 			if (!is_dir($views)) $views = realpath(sprintf('%s/%s', $_SERVER['DOCUMENT_ROOT'], $views));
 			if (mb_substr($views, -1) != '/') $views .= '/';
 			
@@ -239,7 +252,7 @@ class akMVC extends akDispatcher {
 				throw new akException(sprintf('Path "%s" is not readable', $this->pathViews));
 			}
 		}
-		if ($controllers) {
+		if (!is_null($controllers)) {
 			if (!is_dir($controllers)) $controllers = realpath(sprintf('%s/%s', $_SERVER['DOCUMENT_ROOT'], $controllers)) . '/';
 			if (mb_substr($controllers, -1) != '/') $controllers .= '/';
 			

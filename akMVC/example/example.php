@@ -25,5 +25,6 @@ $mvc = akMVC::getInstance();
 $mvc->setPaths('akMVC/example/models/', 'akMVC/example/views/', 'akMVC/example/controllers/');
 // the right event
 $mvc->add('/akMVC/example/test/:num', 'example.php', 'exampleCallback');
+$mvc->add('/akMVC/example/whatYourWhant*', 'example.php', 'exampleCallback'); // quantifier
 
 $mvc->run();
