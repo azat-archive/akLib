@@ -1,4 +1,3 @@
-<?
 
 /*
  * This file is part of the akLib package.
@@ -7,9 +6,7 @@
  * For the full copyright and license information, please view http://www.gnu.org/licenses/gpl-2.0.html
  */
 
-/**
-
-@author Azat Khuzhin <dohardgopro@gmail.com>
+Azat Khuzhin <dohardgopro@gmail.com>
 @package akLib
 @license GPLv2
 
@@ -62,4 +59,3 @@ Small descriptions:
 		akCodeConverter/cli.php - run from cli
 		akCodeConverter/example_in.php - what in
 		akCodeConverter/example_out.php - what out
-*/
