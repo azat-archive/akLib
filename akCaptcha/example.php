@@ -15,7 +15,7 @@
  * @author Azat Khuzhin
  */
 
-require_once dirname(__FILE__) . '/../main.php';
+require_once __DIR__ . '/../main.php';
 require_once 'akCaptcha.class.php';
 
 session_start();

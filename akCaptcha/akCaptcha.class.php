@@ -215,7 +215,7 @@ class akCaptcha {
 	protected function validate() {
 		// font in current dir
 		if (strpos($this->fontPath, '/') === false) {
-			$this->fontPath = realpath(dirname(__FILE__)) . '/' . $this->fontPath;
+			$this->fontPath = realpath(__DIR__) . '/' . $this->fontPath;
 		}
 		
 		// some errors

@@ -16,4 +16,4 @@
  * @licence GPLv2
  */
  
-set_include_path(get_include_path() . ':' . realpath(dirname(__FILE__)));
+set_include_path(get_include_path() . PATH_SEPARATOR . realpath(__DIR__));

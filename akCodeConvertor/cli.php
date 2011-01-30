@@ -17,8 +17,8 @@
  * @licence GPLv2
  */
 
-require_once dirname(__FILE__) . '/../main.php';
-require_once dirname(__FILE__) . '/akCodeConvertor.class.php';
+require_once __DIR__ . '/../main.php';
+require_once __DIR__ . '/akCodeConvertor.class.php';
 
 if (mb_strtolower(PHP_SAPI) != 'cli') throw new akException('Must run from CLI (Comand Line Interface)');
 
