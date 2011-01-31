@@ -227,7 +227,7 @@ class akDispatcher {
 			$this->params = array();
 			
 			// founded
-			if ($this->checkRoute($event)) {
+			if (($matches = $this->checkRoute($event))) {
 				// delete numeric params
 				// first delete than add,
 				// because we need to call user func with only string keys
