@@ -564,4 +564,13 @@ class akDispatcher {
 		if ($n1 === $n2) return 0;
 		return ($n1 > $n2);
 	}
+	
+	/**
+	 * Return request method
+	 * 
+	 * @return string // in lower case
+	 */
+	public function getRequestMethod() {
+		return $this->requestMethod;
+	}
 }
