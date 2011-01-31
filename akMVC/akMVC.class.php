@@ -125,7 +125,7 @@ class akMVC extends akDispatcher {
 			$this->params = array();
 			
 			// founded
-			if (preg_match($this->pattern($event['path']), $this->requestQuery, $matches) && ($event['method'] == $this->requestMethod || $event['method'] == 'both')) {
+			if ($this->checkRoute($event)) {
 				// delete numeric params
 				// first delete than add,
 				// because we need to call user func with only string keys
@@ -142,6 +142,14 @@ class akMVC extends akDispatcher {
 					require_once $this->pathControllers . $event['controller'];
 				} else {
 					throw new akException(sprintf('Controller "%s" is not readable or not exists (see %s::pathControllers)', $event['controller'], __CLASS__));
+				}
+				
+				// check funcOrContent param
+				if (is_array($event['funcOrContent']) && count($event['funcOrContent']) == 2 && is_string($event['funcOrContent'][0])) {
+					$event['funcOrContent'] = array(
+						new $event['funcOrContent'][0],
+						$event['funcOrContent'][1],
+					)
 				}
 				
 				// not final route
