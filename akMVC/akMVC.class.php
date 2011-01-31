@@ -149,7 +149,7 @@ class akMVC extends akDispatcher {
 					$event['funcOrContent'] = array(
 						new $event['funcOrContent'][0],
 						$event['funcOrContent'][1],
-					)
+					);
 				}
 				
 				// not final route
