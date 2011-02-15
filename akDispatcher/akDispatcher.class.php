@@ -170,7 +170,7 @@ class akDispatcher {
 	 */
 	static function getInstance($delimiter = null, $requestQuery = null, $charset = null, $type = null, $additionalParamDelimiter = null) {
 		static $object;
-		if (!$object) $object = new akDispatcher($delimiter, $requestQuery, $charset, $type);
+		if (!$object) $object = new akDispatcher($delimiter, $requestQuery, $charset, $type, $additionalParamDelimiter);
 		
 		return $object;
 	}

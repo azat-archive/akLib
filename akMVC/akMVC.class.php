@@ -49,8 +49,8 @@ class akMVC extends akDispatcher {
 	 * 
 	 * @see parent::__construct()
 	 */
-	public function __construct($delimiter = null, $requestQuery = null, $charset = null, $type = null) {
-		parent::__construct($delimiter = null, $requestQuery = null, $charset = null, $type = null);
+	public function __construct($delimiter = null, $requestQuery = null, $charset = null, $type = null, $additionalParamDelimiter = null) {
+		parent::__construct($delimiter = null, $requestQuery = null, $charset = null, $type = null, $additionalParamDelimiter);
 		
 		$this->setPaths('models', 'views', 'controllers');
 	}
@@ -60,9 +60,9 @@ class akMVC extends akDispatcher {
 	 * 
 	 * @see parent::getInstance()
 	 */
-	static function getInstance($delimiter = null, $requestQuery = null, $charset = null, $type = null) {
+	static function getInstance($delimiter = null, $requestQuery = null, $charset = null, $type = null, $additionalParamDelimiter = null) {
 		static $object;
-		if (!$object) $object = new akMVC($delimiter, $requestQuery, $charset, $type);
+		if (!$object) $object = new akMVC($delimiter, $requestQuery, $charset, $type, $additionalParamDelimiter);
 		
 		return $object;
 	}
