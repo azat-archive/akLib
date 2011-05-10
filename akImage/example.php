@@ -20,15 +20,15 @@
 require_once __DIR__ . '/../main.php';
 require_once 'akImage.class.php';
 
-$path = realpath(dirname(__FILE__)) . '/';
+$path = realpath(__DIR__) . '/';
 
 /// ========= Using GD =========
-$image = akImage::getInstance($path . 'example.jpg');
+$image = akImage::getInstance($path . 'example.png');
 $image->usingImagick = false;
-$image->resize(50, 50, 'exampleResizeGD.jpg');
-$image->rotate(90, $path . 'exampleRotatedGD.jpg');
+$image->resize(50, 50, 'exampleResizeGD.png');
+$image->rotate(90, $path . 'exampleRotatedGD.png');
 
 /// ========= Using Imagick =========
 $image->usingImagick = true;
-$image->resize(50, 50, 'exampleResizeImagick.jpg');
-$image->rotate(90, $path . 'exampleRotatedImagick.jpg');
+$image->resize(50, 50, 'exampleResizeImagick.png');
+$image->rotate(90, $path . 'exampleRotatedImagick.png');

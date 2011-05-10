@@ -204,12 +204,18 @@ class akImage {
 		if (!$this->usingImagick && !function_exists('imagerotate')) throw new akException('No suitable function found and imagick is not installed');
 		// if no destination, then changes will overwrite source file
 		if (!$dst) $dst = $this->srcPath;
+		// normalize angle
+		$angle %= 360;
 		
 		if ($this->usingImagick) {
 			if (akExec::getInstance()->quickStart(sprintf('%s -quality %u -rotate %u %s %s', self::imagickPath, $q, 360-$angle, $this->srcPath, $dst))) {
 				return true;
 			}
 		} else {
+			// maybe transparent
+			if (in_array($this->extensionCheck($dst), array('png', 'gif'))) {
+				trigger_error('Not using GD for rotate transparent images', E_USER_NOTICE);
+			}
 			$image = $this->gdOpen($this->srcPath);
 			$image = imagerotate($image, $angle, 0);
 			return $this->gdSave($image, $dst, $q);
@@ -258,6 +264,13 @@ class akImage {
 	 */
 	protected function gdSave($image, $dst, $q = 100) {
 		$ext = $this->extensionCheck($dst);
+		if ($q > 100) {
+			throw new akException('Quality can`t be more than 100');
+		}
+		if ($ext == 'png') {
+			// for png compression level: from 0 (no compression) to 9
+			$q = round($q * 0.09);
+		}
 		return call_user_func_array('image' . $ext, array($image, $dst, $q));
 	}
 
