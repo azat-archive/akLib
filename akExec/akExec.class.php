@@ -147,7 +147,7 @@ class akExec {
 			
 			// if we set to get errors from STDERR and there is something, then throwing an expetion
 			if (isset($this->descriptors[2]) && stream_get_contents($pipes[2])) {
-				throw new akException('Error occurred while createing a processs');
+				throw new akException('Error occurred while createing a process');
 			}
 			
 			return $pool;
@@ -346,23 +346,50 @@ class akExec {
 	 * @return bool - true if all process is alredy exit, otherwize false
 	 */
 	public function loop($callback, $iteratorCallback = null, $step = 1, $limit = null) {
+		// this need not to stop check of process running or not
+		// because all callback need some time to execute
+		$complete = array();
+	
 		while ($this->isRuning()) {
 			sleep($step);
+			// limit
 			if (!is_null($limit) && !$limit--) {
 				return false;
 			}
 			
-			foreach ($this->pool as $pool) {
-				$status = proc_get_status($pool['handler']);
-				if (!$status['running']) {
-					call_user_func($callback, $status);
-				}
-			}
-			
+			// run callback for iterator, if it is set
 			if (!is_null($iteratorCallback)) {
 				call_user_func($iteratorCallback);
 			}
+			
+			// run callbacks for process, that already completed
+			if (!empty($complete)) {
+				reset($complete);
+				while ($process = current($complete)) {
+					call_user_func($process[0], $process[1]);
+					next($complete);
+				}
+				$complete = array();
+			}
+			
+			// do check for running, at the end of cycle (because for execute callback need time)
+			foreach ($this->pool as $pool) {
+				$status = proc_get_status($pool['handler']);
+				if (!$status['running']) {
+					$complete[] = array($callback, $status);
+				}
+			}
 		}
+		// run callbacks for all remaining process
+		if (!empty($complete)) {
+			reset($complete);
+			while ($process = current($complete)) {
+				call_user_func($process[0], $process[1]);
+				next($complete);
+			}
+			$complete = array();
+		}
+		
 		return true;
 	}
 }
