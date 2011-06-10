@@ -335,4 +335,34 @@ class akExec {
 		}
 		return $this->pool[$handler]['user_data'][$key];
 	}
+	
+	/**
+	 * Loop while process is runing
+	 * 
+	 * @param callback $callback - callback when process is complete (call with argument @see proc_get_status())
+	 * @param callback $iteratorCallback - callback for each iteration
+	 * @param int $step - sleep in seconds for one iteration
+	 * @param int $limit - max iterations (@see $step)
+	 * @return bool - true if all process is alredy exit, otherwize false
+	 */
+	public function loop($callback, $iteratorCallback = null, $step = 1, $limit = null) {
+		while ($this->isRuning()) {
+			sleep($step);
+			if (!is_null($limit) && !$limit--) {
+				return false;
+			}
+			
+			foreach ($this->pool as $pool) {
+				$status = proc_get_status($pool['handler']);
+				if (!$status['running']) {
+					call_user_func($callback, $status);
+				}
+			}
+			
+			if (!is_null($iteratorCallback)) {
+				call_user_func($iteratorCallback);
+			}
+		}
+		return true;
+	}
 }
