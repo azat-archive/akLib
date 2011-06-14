@@ -59,3 +59,7 @@ Small descriptions:
 		akCodeConverter/cli.php - run from cli
 		akCodeConverter/example_in.php - what in
 		akCodeConverter/example_out.php - what out
+	
+	11.
+		akColorOutput/akColorOutput.class.php - Color output in *nix CLI
+		akColorOutput/example.php - example of using
