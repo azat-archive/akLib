@@ -11,7 +11,7 @@
  * Exapmle of akMVC
  * View example
  * 
- * @author Azat Khuzhin
+ * @author Azat Khuzhin <dohardgopro@gmail.com>
  */
 
 ?>

@@ -11,7 +11,7 @@
  * Exapmle of akMVC
  * Controller example
  * 
- * @author Azat Khuzhin
+ * @author Azat Khuzhin <dohardgopro@gmail.com>
  */
 
 akMVC::getInstance()->requireModel('example.php');

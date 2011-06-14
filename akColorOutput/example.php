@@ -12,7 +12,7 @@
  * 
  * @licence GPLv2
  * 
- * @author Azat Khuzhin
+ * @author Azat Khuzhin <dohardgopro@gmail.com>
  */
 
 require_once __DIR__ . '/../main.php';
