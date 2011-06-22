@@ -88,10 +88,22 @@ class akColorOutput {
 		return $o;
 	}
 
+	/**
+	 * Printf like function
+	 * 
+	 * @return int
+	 */
 	public function printf() {
-		return printf(call_user_func_array(array(&$this, 'sprintf'), func_get_args()));
+		$str = call_user_func_array(array(&$this, 'sprintf'), func_get_args());
+		echo $str;
+		return strlen($str);
 	}
 
+	/**
+	 * Sprintf like function
+	 * 
+	 * @return string
+	 */
 	public function sprintf() {
 		$str = call_user_func_array('sprintf', func_get_args());
 		
@@ -102,11 +114,25 @@ class akColorOutput {
 		}
 	}
 
+	/**
+	 * Set color
+	 * 
+	 * @see class const COLOR_*
+	 * 
+	 * @param int $color
+	 * @return ColorOutput
+	 */
 	public function setColor($color) {
 		$this->color = $color;
 		return $this;
 	}
 
+	/**
+	 * Set bold
+	 * 
+	 * @param bool $bold
+	 * @return ColorOutput
+	 */
 	public function setBold($bold) {
 		$this->colorBold = $bold;
 		return $this;
