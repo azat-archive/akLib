@@ -373,10 +373,11 @@ class akExec {
 			}
 			
 			// do check for running, at the end of cycle (because for execute callback need time)
-			foreach ($this->pool as $pool) {
+			foreach ($this->pool as $key => $pool) {
 				$status = proc_get_status($pool['handler']);
 				if (!$status['running']) {
 					$complete[] = array($callback, $status);
+					unset($this->pool[$key]);
 				}
 			}
 		}
